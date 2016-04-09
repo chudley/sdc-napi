@@ -14,6 +14,7 @@
 
 'use strict';
 
+var assert = require('assert-plus');
 var h = require('../integration/helpers');
 var test = require('tape');
 
@@ -70,21 +71,24 @@ function failFabricsTest(t) {
  * checkIfEnabled() runs first), these tests will show up *after* the other
  * high-level tests run.
  */
-function testIfFabricsEnabled(/* desc, [opts], next */) {
-    var testArgs = arguments;
-    var testName = Array.prototype.slice.call(arguments, 0, 1)[0];
+function testIfFabricsEnabled(testName, testFunc) {
+    assert.string(testName, 'testName');
+    assert.func(testFunc, 'testFunc');
 
-    checkIfEnabled(function _afterCheck(err, enabled) {
-        if (err) {
-            test.comment('ping error: ' + JSON.stringify(err.body));
-            return test(testName, failFabricsTest);
-        }
+    test(testName, function (t) {
+        checkIfEnabled(function _afterCheck(err, enabled) {
+            if (err) {
+                t.ifErr(err, 'ping error');
+                failFabricsTest(t);
+                return;
+            }
 
-        if (enabled) {
-            return test.apply(null, testArgs);
-        } else {
-            return test(testName, failFabricsTest);
-        }
+            if (enabled) {
+                testFunc(t);
+            } else {
+                failFabricsTest(t);
+            }
+        });
     });
 }
 

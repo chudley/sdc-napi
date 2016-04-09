@@ -34,7 +34,7 @@ var test = require('../lib/fabrics').testIfEnabled;
 // 65 character string:
 var LONG_STR =
     'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
-var NAPI = h.createNAPIclient();
+var NAPI;
 var OWNERS = [
     mod_uuid.v4(),
     mod_uuid.v4()
@@ -67,6 +67,7 @@ var VLANS = [
 
 
 test('setup', function (tt) {
+    NAPI = h.createNAPIclient();
 
     tt.test('create vlan 0', function (t) {
         mod_vlan.createAndGet(t, {
@@ -74,7 +75,6 @@ test('setup', function (tt) {
             exp: VLANS[0]
         });
     });
-
 });
 
 

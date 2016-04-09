@@ -230,3 +230,7 @@ module.exports = {
     overlayMapping: overlayMapping,
     underlayMapping: underlayMapping
 };
+
+Object.defineProperty(module.exports, 'moray_client', {
+    set: function (val) { MORAY_CLIENT = val; }
+});

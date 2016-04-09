@@ -16,6 +16,7 @@
 
 var common = require('./common');
 var config = require('./config');
+var extend = require('xtend');
 var mod_log = require('./log');
 var moray_sandbox = require('moray-sandbox');
 var mod_client = require('./client');
@@ -135,6 +136,8 @@ function createTestServer(opts, callback) {
         component: 'test-server'
     });
 
+    var napi_config = extend(config.server, opts.config || {});
+
     function startWithMoray(err, moray) {
         if (err) {
             callback(err);
@@ -142,7 +145,7 @@ function createTestServer(opts, callback) {
         }
 
         var server = new NAPI({
-            config: config.server,
+            config: napi_config,
             log: log_child
         });
         SERVER = server;
@@ -158,9 +161,29 @@ function createTestServer(opts, callback) {
         server.on('initialized', function _afterReady() {
             log_child.debug('server initialized');
 
-            var client = common.createClient(SERVER.info().url);
-            mod_client.set(client);
-            callback(null, { server: SERVER, client: client, moray: moray });
+
+            server.doMigrations(function (mErr) {
+                if (mErr) {
+                    log_child.error(mErr, 'Error migrating data');
+                    callback(mErr);
+                    return;
+                } else {
+                    log_child.info('Migrations complete');
+                }
+
+                server.loadInitialData(function () {
+                    log_child.info('Initial data loaded');
+
+                    var client = common.createClient(SERVER.info().url);
+                    mod_client.set(client);
+
+                    callback(null, {
+                        server: SERVER,
+                        client: client,
+                        moray: moray
+                    });
+                });
+            });
         });
 
         server.start(function _afterStart(startErr) {

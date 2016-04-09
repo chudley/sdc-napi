@@ -58,10 +58,12 @@ function addNetParamsToNic(state, params) {
  * specified by them.  Otherwise, use the local zone's NAPI.
  */
 function createNAPIclient(t) {
-    var client = common.createClient(config.napi.host, t);
-    if (!mod_client.initialized()) {
-        mod_client.set(client);
+    if (mod_client.initialized()) {
+        return mod_client.get();
     }
+
+    var client = common.createClient(config.napi.host, t);
+    mod_client.set(client);
 
     return client;
 }
