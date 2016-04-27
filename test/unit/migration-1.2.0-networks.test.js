@@ -16,6 +16,7 @@
 
 var constants = require('../../lib/util/constants');
 var extend = require('xtend');
+var h = require('./helpers');
 var mod_ip = require('../lib/ip');
 var mod_migr = require('../lib/migration');
 var mod_net = require('../lib/net');
@@ -31,6 +32,7 @@ var test = require('tape');
 
 
 
+var NAPI;
 var BUCKETS = {
     adminIPs: ipsBucketV1('napi_ips_07eef409_c6eb_42cb_8712_bb0deaab8108'),
 
@@ -550,11 +552,27 @@ test('migrate', function (t) {
     });
 
 
-    t.test('create server', mod_server.create);
+    t.test('create server', function (t2) {
+        mod_migr.getMorayClient(function (err, client) {
+            if (h.ifErr(t2, err, 'got Moray sandbox client')) {
+                t2.end();
+                return;
+            }
+
+            mod_server._create({ moray: client }, function (err2, res) {
+                if (h.ifErr(t2, err2, 'started NAPI server')) {
+                    t.end();
+                    return;
+                }
+                NAPI = res;
+                t2.ok(NAPI, 'have NAPI client object');
+                t2.end();
+            });
+        });
+    });
 
 
     t.test('run migrations', mod_migr.run);
-
 });
 
 test('networks', function (t) {
@@ -744,10 +762,4 @@ test('nic tags', function (t) {
 });
 
 
-test('teardown', function (t) {
-    t.test('shutdown server', mod_server.close);
-
-    t.test('delete test buckets', mod_migr.delAllCreated);
-
-    t.test('close moray client', mod_migr.closeClient);
-});
+test('teardown', mod_server.close);
