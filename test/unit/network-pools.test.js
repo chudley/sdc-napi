@@ -347,29 +347,6 @@ test('Create pool - too many networks', function (t) {
 });
 
 
-test('Create pool - mismatched nic tags', function (t) {
-    var params = {
-        networks: [ NETS[0].uuid, NETS[3].uuid ]
-    };
-
-    NAPI.createNetworkPool('pool-fail-2-' + process.pid, params,
-        function (err, res) {
-        t.ok(err, 'error returned');
-        if (!err) {
-            return t.end();
-        }
-
-        t.equal(err.statusCode, 422, 'status code');
-        t.deepEqual(err.body, h.invalidParamErr({
-            errors: [ mod_err.invalidParam('networks',
-                constants.POOL_TAGS_MATCH_MSG) ]
-        }), 'error body');
-
-        return t.end();
-    });
-});
-
-
 test('Create pool - invalid params (non-objects)', function (t) {
     vasync.forEachParallel({
         inputs: h.NON_OBJECT_PARAMS,
